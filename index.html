@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeachTrack - Attendance Management</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-chalkboard-teacher"></i> TeachTrack</h2>
+        </div>
+        <ul class="sidebar-nav">
+            <li><a href="#" class="nav-link active" data-section="dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+            <li><a href="#" class="nav-link" data-section="attendance"><i class="fas fa-clipboard-check"></i> Take Attendance</a></li>
+            <li><a href="#" class="nav-link" data-section="students"><i class="fas fa-users"></i> Students</a></li>
+            <li><a href="#" class="nav-link" data-section="reports"><i class="fas fa-chart-bar"></i> Reports</a></li>
+            <li><a href="#" class="nav-link" data-section="schedule"><i class="fas fa-calendar"></i> Schedule</a></li>
+            <li><a href="#" class="nav-link" data-section="fees"><i class="fas fa-money-bill-wave"></i> Fees</a></li>
+        </ul>
+    </nav>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn--primary" id="quickAttendance">
+                        <i class="fas fa-plus"></i> Quick Attendance
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="dashboard-grid">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalStudents">20</h3>
+                            <p>Total Students</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="avgAttendance">88.2%</h3>
+                            <p>Average Attendance</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="totalClasses">24</h3>
+                            <p>Classes This Month</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="feePending">6</h3>
+                            <p>Fee Pending</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Monthly Attendance Trend</h3>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="attendanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card__body">
+                            <h3>Class Distribution</h3>
+                            <div class="chart-container" style="position: relative; height: 300px;">
+                                <canvas id="classChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card__header">
+                        <h3>Recent Activity</h3>
+                    </div>
+                    <div class="card__body">
+                        <div class="activity-list" id="recentActivity">
+                            <!-- Activity items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attendance Section -->
+        <section id="attendance" class="content-section">
+            <div class="attendance-header">
+                <div class="attendance-controls">
+                    <select id="classSelect" class="form-control">
+                        <option value="">Select Class</option>
+                    </select>
+                    <input type="date" id="attendanceDate" class="form-control" />
+                    <button class="btn btn--secondary" id="bulkPresent">Mark All Present</button>
+                    <button class="btn btn--outline" id="bulkAbsent">Mark All Absent</button>
+                </div>
+            </div>
+            
+            <div class="attendance-grid" id="attendanceGrid">
+                <!-- Student attendance cards will be populated by JavaScript -->
+            </div>
+
+            <div class="attendance-actions">
+                <button class="btn btn--primary" id="saveAttendance">
+                    <i class="fas fa-save"></i> Save Attendance
+                </button>
+                <button class="btn btn--outline" id="resetAttendance">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+        </section>
+
+        <!-- Students Section -->
+        <section id="students" class="content-section">
+            <div class="students-header">
+                <div class="students-controls">
+                    <input type="text" id="studentSearch" class="form-control" placeholder="Search students...">
+                    <select id="classFilter" class="form-control">
+                        <option value="">All Classes</option>
+                    </select>
+                    <button class="btn btn--primary" id="addStudent">
+                        <i class="fas fa-plus"></i> Add Student
+                    </button>
+                </div>
+            </div>
+            
+            <div class="students-grid" id="studentsGrid">
+                <!-- Student cards will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="content-section">
+            <div class="reports-header">
+                <h2>Generate Reports</h2>
+                <div class="report-controls">
+                    <select id="reportClass" class="form-control">
+                        <option value="">Select Class</option>
+                    </select>
+                    <input type="date" id="reportStartDate" class="form-control">
+                    <input type="date" id="reportEndDate" class="form-control">
+                    <button class="btn btn--primary" id="generateReport">
+                        <i class="fas fa-file-pdf"></i> Generate PDF
+                    </button>
+                    <button class="btn btn--secondary" id="shareReport">
+                        <i class="fas fa-share"></i> Share
+                    </button>
+                </div>
+            </div>
+            
+            <div class="report-preview" id="reportPreview">
+                <div class="report-content">
+                    <div class="report-header">
+                        <h2>Attendance Report</h2>
+                        <div class="report-info">
+                            <p><strong>Class:</strong> <span id="reportClassName">-</span></p>
+                            <p><strong>Period:</strong> <span id="reportPeriod">-</span></p>
+                            <p><strong>Generated:</strong> <span id="reportDate">-</span></p>
+                        </div>
+                    </div>
+                    <div class="report-table" id="reportTable">
+                        <!-- Report table will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section id="schedule" class="content-section">
+            <div class="schedule-header">
+                <h2>Class Schedule</h2>
+                <button class="btn btn--primary" id="addSchedule">
+                    <i class="fas fa-plus"></i> Add Class
+                </button>
+            </div>
+            <div class="schedule-grid" id="scheduleGrid">
+                <!-- Schedule cards will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Fees Section -->
+        <section id="fees" class="content-section">
+            <div class="fees-header">
+                <h2>Fee Management</h2>
+                <div class="fee-controls">
+                    <select id="feeClassFilter" class="form-control">
+                        <option value="">All Classes</option>
+                    </select>
+                    <select id="feeStatusFilter" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+            </div>
+            <div class="fees-grid" id="feesGrid">
+                <!-- Fee cards will be populated by JavaScript -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <div id="studentModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add Student</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="studentForm">
+                    <div class="form-group">
+                        <label class="form-label">Name</label>
+                        <input type="text" id="studentName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Class</label>
+                        <select id="studentClass" class="form-control" required>
+                            <option value="">Select Class</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Roll Number</label>
+                        <input type="text" id="studentRoll" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Parent Email</label>
+                        <input type="email" id="studentEmail" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Parent Phone</label>
+                        <input type="tel" id="studentPhone" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Fee Status</label>
+                        <select id="studentFeeStatus" class="form-control">
+                            <option value="paid">Paid</option>
+                            <option value="pending">Pending</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn--outline" id="cancelModal">Cancel</button>
+                <button class="btn btn--primary" id="saveStudent">Save Student</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast hidden">
+        <div class="toast-content">
+            <span id="toastMessage"></span>
+            <button id="toastClose" class="toast-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
